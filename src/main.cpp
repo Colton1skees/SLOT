@@ -293,9 +293,18 @@ int main(int argc, char* argv[])
   //Frontend translation
 
 
-
   Function *fun = lmodule.getFunction(LLVM_FUNCTION_NAME);
   unsigned short parsedPasses = ParsePasses(argc, argv);
+
+
+  // Always dump initial and optimized IR using names derived from -s flag
+  std::string inputIRPath = std::string(inputFilename) + "_LLVM_INPUT";
+  std::string outputIRPath = std::string(inputFilename) + "_LLVM_OUTPUT";
+
+  {
+    raw_fd_ostream file(inputIRPath, *(new std::error_code()));
+    lmodule.print(file, nullptr);
+  }
 
 
   char * luFilename;
@@ -312,6 +321,12 @@ int main(int argc, char* argv[])
   auto optEnd = high_resolution_clock::now();
   duration<double> optTime = optEnd - optStart;
   //Optimization
+
+
+  {
+    raw_fd_ostream file(outputIRPath, *(new std::error_code()));
+    lmodule.print(file, nullptr);
+  }
 
 
   char * loFilename;
