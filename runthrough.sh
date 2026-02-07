@@ -54,7 +54,7 @@ NAME="${FILE%.*}"
 SLOT_GOOD=true
 
 #Check for timeout of SLOT
-SLOT_OUT=$( { /usr/bin/time -f "tmr%e" timeout $SLOT_TIMEOUT ./main -m -pall -s $FILE -o $NAME-opt.smt2 -t $STATS; } 2>&1 > /dev/null )
+SLOT_OUT=$( { /usr/bin/time -f "tmr%e" timeout $SLOT_TIMEOUT ./slot -m -pall -s $FILE -o $NAME-opt.smt2 -t $STATS; } 2>&1 > /dev/null )
 if [[ $? == 124 ]]
 then
     SLOT_GOOD=false
