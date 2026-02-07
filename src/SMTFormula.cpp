@@ -108,6 +108,8 @@ namespace SLOT
         BasicBlock* bb = BasicBlock::Create(lcx, "b", function);
         builder.SetInsertPoint(bb);
         
+        SMT_CACHE cache;
+
         if (assertions.size() == 0)
         {
             //Empty constraint is sat
@@ -115,13 +117,13 @@ namespace SLOT
         }
         else
         {
-            Value* temp = assertions[0].ToLLVM();
+            Value* temp = assertions[0].ToLLVM(cache);
             //Conjunction of all assertions
             if (assertions.size() > 1)
             {
                 for (int i = 1; i < assertions.size(); i++)
                 {
-                    temp = builder.CreateAnd(temp,assertions[i].ToLLVM());
+                    temp = builder.CreateAnd(temp,assertions[i].ToLLVM(cache));
                 }
             }
 

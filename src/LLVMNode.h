@@ -21,11 +21,17 @@
 
 #include <iostream>
 #include <map>
+#include <unordered_map>
+#include <memory>
 
 #include"z3++.h"
 
 #ifndef SMTMAPPING
 #define SMTMAPPING std::map<std::string, expr>
+#endif
+
+#ifndef LLVM_CACHE
+#define LLVM_CACHE std::unordered_map<Value*, Z3_ast>
 #endif
 
 using namespace llvm;
@@ -47,10 +53,10 @@ namespace SLOT
       bool shiftToMultiply;
       expr extraVariables; // Hold results of bitcast to bitvector
 
-      expr AddBCVariable(std::unique_ptr<LLVMNode> contents);
+      expr AddBCVariable(std::unique_ptr<LLVMNode> contents, LLVM_CACHE& cache);
 
       LLVMFunction(bool t_shiftToMultiply, context &t_scx, Function *t_contents);
-      expr ToSMT();
+      expr ToSMT(LLVM_CACHE& cache);
 
       // bool CheckAssignment(model m);
   };
@@ -71,20 +77,20 @@ namespace SLOT
 
       LLVMNode(bool t_shiftToMultiply, context& t_scx, LLVMFunction& t_function, Value* t_contents);
       virtual ~LLVMNode() {}
-      virtual expr ToSMT() = 0;
+      virtual expr ToSMT(LLVM_CACHE& cache) = 0;
   };
 
   class LLVMArgument : public LLVMNode
   {
     public:
-      expr ToSMT() override;
+      expr ToSMT(LLVM_CACHE& cache) override;
       LLVMArgument(bool t_shiftToMultiply, context& t_scx, LLVMFunction& function, Value* t_contents);
   };
 
   class LLVMConstant : public LLVMNode
   {
     public:
-      expr ToSMT() override;
+      expr ToSMT(LLVM_CACHE& cache) override;
       LLVMConstant(bool t_shiftToMultiply, context& t_scx, LLVMFunction& function, Value* t_contents);
   };
 
@@ -98,7 +104,7 @@ namespace SLOT
       inline unsigned Opcode() { return AsInstruction()->getOpcode(); }
       inline expr Zero() { return scx.bv_val(0,Width()); }
 
-      expr ToSMT() override;
+      expr ToSMT(LLVM_CACHE& cache) override;
       LLVMExpression(bool t_shiftToMultiply, context& t_scx, LLVMFunction& function, Value* t_contents);
   };
 
@@ -108,7 +114,7 @@ namespace SLOT
 
       inline CmpInst::Predicate Predicate() { return ((ICmpInst*)contents)->getPredicate(); }
 
-      expr ToSMT() override;
+      expr ToSMT(LLVM_CACHE& cache) override;
       LLVMIcmp(bool t_shiftToMultiply, context& t_scx, LLVMFunction& function, Value* t_contents);
   };
 
@@ -118,7 +124,7 @@ namespace SLOT
 
       inline CmpInst::Predicate Predicate() { return ((FCmpInst*)contents)->getPredicate(); }
 
-      expr ToSMT() override;
+      expr ToSMT(LLVM_CACHE& cache) override;
       LLVMFcmp(bool t_shiftToMultiply, context& t_scx, LLVMFunction& function, Value* t_contents);
   };
 
@@ -129,7 +135,7 @@ namespace SLOT
 
       expr AsRoundingMode(unsigned n);
 
-      expr ToSMT() override;
+      expr ToSMT(LLVM_CACHE& cache) override;
       LLVMIntrinsicCall(bool t_shiftToMultiply, context& t_scx, LLVMFunction& function, Value* t_contents);
   };
 

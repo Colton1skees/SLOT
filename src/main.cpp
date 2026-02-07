@@ -282,9 +282,12 @@ int main(int argc, char* argv[])
 
   
   //Frontend translation
+  std::cerr << "Starting frontend..." << std::endl;
   auto frontStart = high_resolution_clock::now();
   SMTFormula a = SMTFormula(lcx, &lmodule, builder, smt_str, LLVM_FUNCTION_NAME);
+  std::cerr << "Starting ToLLVM..." << std::endl;
   a.ToLLVM();
+  std::cerr << "Frontend finished." << std::endl;
   auto frontEnd = high_resolution_clock::now();
   duration<double> frontTime = frontEnd - frontStart;
   //Frontend translation
@@ -326,7 +329,8 @@ int main(int argc, char* argv[])
   //Backend translation
   auto backStart = high_resolution_clock::now();
   LLVMFunction f = LLVMFunction(shiftToMultiply, c, fun);
-  s.add(f.ToSMT());
+  LLVM_CACHE cache;
+  s.add(f.ToSMT(cache));
   auto backEnd = high_resolution_clock::now();
   duration<double> backTime = backEnd - backStart;
   //Backend translation

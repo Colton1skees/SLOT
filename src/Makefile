@@ -1,12 +1,13 @@
 CC= g++
-CPPFLAGS= -I/root/z3/usr/include -I/z3/src -I/root/llvm-project/build/include -std=c++17 -fno-rtti -D_GNU_SOURCE -D_DEBUG -D_GLIBCXX_ASSERTIONS -D_LIBCPP_ENABLE_ASSERTIONS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -g -O3 -fexceptions
+LLVM_CONFIG= llvm-config-15
+CPPFLAGS= $(shell $(LLVM_CONFIG) --cppflags) -std=c++17 -fno-rtti -D_GNU_SOURCE -D_DEBUG -D_GLIBCXX_ASSERTIONS -D_LIBCPP_ENABLE_ASSERTIONS -g -O3 -fexceptions
 
 # Add z3 library flags
-Z3_LDFLAGS=-L/root/z3/usr/lib -lz3
+Z3_LDFLAGS=-lz3
 
 # Use llvm-config to get the necessary flags and libraries
-LLVM_LDFLAGS=$(shell llvm-config --ldflags)
-LLVM_LIBS=$(shell llvm-config --system-libs --libs core passes)
+LLVM_LDFLAGS=$(shell $(LLVM_CONFIG) --ldflags)
+LLVM_LIBS=$(shell $(LLVM_CONFIG) --system-libs --libs core passes)
 
 LDLIBS=$(Z3_LDFLAGS) $(LLVM_LDFLAGS) $(LLVM_LIBS)  -lrt -ldl -lpthread -lm -lz -ltinfo -lxml2
 

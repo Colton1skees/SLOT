@@ -20,11 +20,17 @@
 
 #include <iostream>
 #include <map>
+#include <unordered_map>
+#include <cstdint>
 
 #include"z3++.h"
 
 #ifndef LLMAPPING
 #define LLMAPPING std::map<std::string, Value*>
+#endif
+
+#ifndef SMT_CACHE
+#define SMT_CACHE std::unordered_map<uintptr_t, Value*>
 #endif
 
 using namespace llvm;
@@ -71,7 +77,7 @@ namespace SLOT
 
       SMTNode(LLVMContext& t_lcx, Module* t_lmodule, IRBuilder<>& t_builder, const LLMAPPING& t_variables, expr t_contents);
       virtual ~SMTNode() {}
-      virtual Value* ToLLVM() = 0;
+      virtual Value* ToLLVM(SMT_CACHE& cache) = 0;
   };
 
   //--------------------------------------------------------------------------------
@@ -88,12 +94,12 @@ namespace SLOT
       static Type* ToFloatingType(LLVMContext& lcx, std::string name, unsigned width);
       inline Type* FloatingType() { return FloatingNode::ToFloatingType(lcx, contents.to_string(), Width()); }  
 
-      Value * LLVMClassCheck(Z3_decl_kind op);
-      Value * LLVMEq(FloatingNode other);
-      Value * LLVMNE(FloatingNode other);
+      Value * LLVMClassCheck(Z3_decl_kind op, SMT_CACHE& cache);
+      Value * LLVMEq(FloatingNode other, SMT_CACHE& cache);
+      Value * LLVMNE(FloatingNode other, SMT_CACHE& cache);
 
 
-      Value* ToLLVM() override;
+      Value* ToLLVM(SMT_CACHE& cache) override;
       FloatingNode(LLVMContext& t_lcx, Module* t_lmodule, IRBuilder<>& t_builder, const LLMAPPING& t_variables, expr t_contents);
   };
 
@@ -105,15 +111,13 @@ namespace SLOT
       inline unsigned Width() { return contents.get_sort().bv_size(); }
       inline Value* Zero() { return ConstantInt::get(IntegerType::get(lcx, Width()), 0);}
 
-      inline Value* IsZero() { return builder.CreateICmpEQ(ToLLVM(),Zero()); }
-      inline Value* IsNegative() { return builder.CreateICmpSLT(ToLLVM(),Zero()); }
-      inline Value* IsPositive() { return builder.CreateICmpSGE(ToLLVM(),Zero()); }
-
-
+      inline Value* IsZero(SMT_CACHE& cache) { return builder.CreateICmpEQ(ToLLVM(cache),Zero()); }
+      inline Value* IsNegative(SMT_CACHE& cache) { return builder.CreateICmpSLT(ToLLVM(cache),Zero()); }
+      inline Value* IsPositive(SMT_CACHE& cache) { return builder.CreateICmpSGE(ToLLVM(cache),Zero()); }
 
       static Value* LlURem(IRBuilder<>& builder, Value * left, Value * right);
 
-      Value* ToLLVM() override;
+      Value* ToLLVM(SMT_CACHE& cache) override;
       BitvectorNode(LLVMContext& t_lcx, Module* t_lmodule, IRBuilder<>& t_builder, const LLMAPPING& t_variables, expr t_contents);
   };
 
@@ -123,7 +127,7 @@ namespace SLOT
   {
     public:
 
-      Value* ToLLVM() override;
+      Value* ToLLVM(SMT_CACHE& cache) override;
 
       BooleanNode(LLVMContext& t_lcx, Module* t_lmodule, IRBuilder<>& t_builder, const LLMAPPING& t_variables, expr t_contents);
   };
